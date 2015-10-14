@@ -1,9 +1,12 @@
 from pyramid.interfaces import IDict
 from zope.interface import Attribute
+from zope.interface import Interface
 
 
-class IUserTags(IDict):
+class IUserTags(Interface):
     """ Adapter for things that can have usertags.
+        Behaves like a set with some extra functions that views might need
+        to interact with tags.
     """
     name = Attribute("Name of the tag - same as adapter name")
 

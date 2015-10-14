@@ -47,8 +47,8 @@ class UserTagsTests(unittest.TestCase):
         obj = self._cut(context)
         obj.name = 'test'
         obj.add('admin')
-        self.assertIn('test', obj)
-        self.assertIn('admin', obj['test'])
+        self.assertIn('test', obj.storage)
+        self.assertIn('admin', obj)
 
     def test_add_notify(self):
         L = []
@@ -69,7 +69,7 @@ class UserTagsTests(unittest.TestCase):
         obj.name = 'test'
         obj.add('admin')
         obj.remove('admin')
-        self.assertNotIn('admin', obj['test'])
+        self.assertNotIn('admin', obj)
 
     def test_remove_notify(self):
         L = []
@@ -112,6 +112,15 @@ class UserTagsTests(unittest.TestCase):
         obj = self._cut(context)
         self.assertTrue(obj)
 
+    def test_convert_to_other_set(self):
+        context = DummyContext()
+        obj = self._cut(context)
+        obj.name = 'test'
+        obj.add('a')
+        obj.add('b')
+        obj.add('c')
+        self.assertEqual(frozenset(obj), frozenset(['a', 'b', 'c']))
+
 
 class UserTagsViewTests(unittest.TestCase):
 
@@ -126,9 +135,9 @@ class UserTagsViewTests(unittest.TestCase):
         from arche_usertags.views import UserTagsView
         return UserTagsView
 
-    def _mk_view(self, subpath = (), tag = 'testing'):
+    def _mk_view(self, subpath = (), tag = 'testing', is_xhr = True):
         context = DummyContext()
-        request = testing.DummyRequest(subpath = subpath)
+        request = testing.DummyRequest(subpath = subpath, is_xhr = is_xhr)
         view = self._cut(context, request)
         view.tag = tag
         return view
@@ -187,7 +196,7 @@ class UserTagsViewTests(unittest.TestCase):
         self.config.testing_securitypolicy('jane_doe')
         view = self._mk_view(subpath = ('testing', '+'))
         view.add()
-        self.assertIn('jane_doe', view.adapter['testing'])
+        self.assertIn('jane_doe', view.adapter)
 
     def test_add_not_authorized(self):
         self._register_dummy_adapter()
@@ -200,9 +209,9 @@ class UserTagsViewTests(unittest.TestCase):
         self.config.testing_securitypolicy('jane_doe')
         view = self._mk_view()
         view.adapter.add('jane_doe')
-        self.assertIn('jane_doe', view.adapter['testing'])
+        self.assertIn('jane_doe', view.adapter)
         view.remove()
-        self.assertNotIn('jane_doe', view.adapter['testing'])
+        self.assertNotIn('jane_doe', view.adapter)
 
     def test_list(self):
         self._register_dummy_adapter()

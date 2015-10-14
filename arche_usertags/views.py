@@ -2,6 +2,7 @@ from arche.views.base import BaseView
 from pyramid.decorator import reify
 from pyramid.httpexceptions import HTTPForbidden
 from pyramid.httpexceptions import HTTPNotFound
+from pyramid.httpexceptions import HTTPFound
 
 from arche_usertags.interfaces import IUserTags
 
@@ -41,11 +42,20 @@ class UserTagsView(BaseView):
         if self.adapter.add_perm and not self.request.has_permission(self.adapter.add_perm, self.context):
             raise HTTPForbidden("Not allowed")
         self.adapter.add(self.request.authenticated_userid)
-        return {'status': 'success'}
+        return self._return_success()
 
     def remove(self):
         self.adapter.remove(self.request.authenticated_userid)
-        return {'status': 'success'}
+        return self._return_success()
 
     def list(self):
-        return {'items': tuple(self.adapter.get(self.tag, ()))}
+        return {'items': tuple(self.adapter)}
+
+    def _return_success(self):
+        if self.request.is_xhr:
+            user_in = self.request.authenticated_userid in self.adapter
+            return {'status': 'success',
+                    'user_in': user_in,
+                    'total': len(self.adapter),
+                    'toggle_url': user_in and self.adapter.remove_url(self.request) or self.adapter.add_url(self.request)}
+        return HTTPFound(location = self.request.resource_url(self.context))
