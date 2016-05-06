@@ -5,3 +5,4 @@ _ = TranslationStringFactory('arche_usertags')
 
 def includeme(config):
     config.include('.utils')
+    config.include('.views')

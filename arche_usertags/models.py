@@ -2,6 +2,7 @@ from BTrees.OOBTree import OOBTree
 from BTrees.OOBTree import OOSet
 from arche.events import ObjectUpdatedEvent
 from arche.security import PERM_VIEW
+from pyramid.security import Authenticated
 from zope.component.event import objectEventNotify
 from zope.interface import implementer
 
@@ -12,10 +13,10 @@ from arche_usertags.interfaces import IUserTags
 class UserTags(object):
     __doc__ = IUserTags.__doc__
     name = '' #Name of the adapter and the tag
-    view_name = '__usertags__'
     catalog_index = None
-    add_perm = PERM_VIEW
-    
+    add_perm = Authenticated
+    view_perm = PERM_VIEW
+
     def __init__(self, context):
         self.context = context
         try:
@@ -46,7 +47,17 @@ class UserTags(object):
         return self.action_url(request, '-')
 
     def action_url(self, request, action):
-        return request.resource_url(self.context, self.view_name, self.name, action)
+        return request.route_url('usertags_view', tag=self.name, action=action, uid=self.context.uid)
+
+    def add_allowed(self, request):
+        if self.add_perm:
+            return request.has_permission(self.add_perm, self.context)
+        return True
+
+    def view_allowed(self, request):
+        if self.view_perm:
+            return request.has_permission(self.view_perm, self.context)
+        return True
 
     def _notify(self):
         event = ObjectUpdatedEvent(self.context, changed = (self.catalog_index,))
