@@ -154,18 +154,25 @@ class UserTagsTests(unittest.TestCase):
     def test_add_perm_callback(self):
         self.config.testing_securitypolicy('jane_doe')
         context = DummyContext()
-        obj = self._cut(context)
+        request = testing.DummyRequest()
 
-        def _perm_callback_true(*args):
+        def _perm_callback_true(adapter, request):
             return True
 
-        def _perm_callback_false(*args):
+        class WithTrueCallback(self._cut):
+            add_perm_callback = _perm_callback_true
+
+        obj = WithTrueCallback(context)
+        self.assertTrue(obj.add_allowed(request))
+
+
+        def _perm_callback_false(adapter, request):
             return False
 
-        request = testing.DummyRequest()
-        obj.add_perm_callback = _perm_callback_true
-        self.assertTrue(obj.add_allowed(request))
-        obj.add_perm_callback = _perm_callback_false
+        class WithFalseCallback(self._cut):
+            add_perm_callback = _perm_callback_false
+
+        obj = WithFalseCallback(context)
         self.assertFalse(obj.add_allowed(request))
 
 

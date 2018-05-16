@@ -54,14 +54,14 @@ class UserTags(object):
 
     def add_allowed(self, request):
         if self.add_perm_callback is not None:
-            return self.add_perm_callback(self, request)
+            return self.add_perm_callback(request)
         if self.add_perm:
             return request.has_permission(self.add_perm, self.context)
         return True
 
     def view_allowed(self, request):
         if self.view_perm_callback is not None:
-            return self.view_perm_callback(self, request)
+            return self.view_perm_callback(request)
         if self.view_perm:
             return request.has_permission(self.view_perm, self.context)
         return True
