@@ -93,7 +93,7 @@ class UserTagsTests(unittest.TestCase):
         obj = self._cut(context)
         obj.name = 'test'
         request = testing.DummyRequest()
-        self.assertEqual(obj.add_url(request), 'http://example.com/autags/test/%2B/uid')
+        self.assertEqual(obj.add_url(request), 'http://example.com/autags/test/+/uid')
 
     def test_remove_url(self):
         self.config.include('arche_usertags.views')
@@ -150,6 +150,23 @@ class UserTagsTests(unittest.TestCase):
         obj.add('b')
         obj.add('c')
         self.assertEqual(frozenset(obj), frozenset(['a', 'b', 'c']))
+
+    def test_add_perm_callback(self):
+        self.config.testing_securitypolicy('jane_doe')
+        context = DummyContext()
+        obj = self._cut(context)
+
+        def _perm_callback_true(*args):
+            return True
+
+        def _perm_callback_false(*args):
+            return False
+
+        request = testing.DummyRequest()
+        obj.add_perm_callback = _perm_callback_true
+        self.assertTrue(obj.add_allowed(request))
+        obj.add_perm_callback = _perm_callback_false
+        self.assertFalse(obj.add_allowed(request))
 
 
 class UserTagsViewTests(unittest.TestCase):

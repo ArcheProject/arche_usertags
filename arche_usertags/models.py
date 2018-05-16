@@ -16,6 +16,9 @@ class UserTags(object):
     catalog_index = None
     add_perm = Authenticated
     view_perm = PERM_VIEW
+    # Alternative way to check permission
+    add_perm_callback = None
+    view_perm_callback = None
 
     def __init__(self, context):
         self.context = context
@@ -50,11 +53,15 @@ class UserTags(object):
         return request.route_url('usertags_view', tag=self.name, action=action, uid=self.context.uid)
 
     def add_allowed(self, request):
+        if self.add_perm_callback is not None:
+            return self.add_perm_callback(self, request)
         if self.add_perm:
             return request.has_permission(self.add_perm, self.context)
         return True
 
     def view_allowed(self, request):
+        if self.view_perm_callback is not None:
+            return self.view_perm_callback(self, request)
         if self.view_perm:
             return request.has_permission(self.view_perm, self.context)
         return True
